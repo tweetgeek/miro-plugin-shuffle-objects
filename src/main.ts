@@ -10,6 +10,12 @@ interface Widget extends IWidget {
   text?: string;
 }
 
+interface DeltaPosition {
+  id: string;
+  deltaX: number;
+  deltaY: number;
+}
+
 function shuffleArray(array: Array<any>) {
   // eslint-disable-next-line no-plusplus
   for (let i = array.length - 1; i > 0; i--) {
@@ -18,6 +24,24 @@ function shuffleArray(array: Array<any>) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
+
+const elementsSameType = (widgets: IWidget[]): boolean =>
+  widgets.map(({ type }) => type).filter((v, i, a) => a.indexOf(v) === i).length === 1;
+
+const calculateNewPositions = (selectedWidgets: IWidget[], shuffledWidgets: IWidget[]): DeltaPosition[] => {
+  const delta: DeltaPosition[] = [];
+  // eslint-disable-next-line no-plusplus
+  for (let i = 0; i < shuffledWidgets.length; i++) {
+    const deltaX = selectedWidgets[i].bounds.x - shuffledWidgets[i].bounds.x;
+    const deltaY = selectedWidgets[i].bounds.y - shuffledWidgets[i].bounds.y;
+
+    if (deltaX !== 0 || deltaY !== 0) {
+      delta.push({ id: shuffledWidgets[i].id, deltaX, deltaY });
+    }
+  }
+
+  return delta;
+};
 
 const buildLoaders = (widgets: IWidget[]): Widget[] =>
   [...widgets].map(
@@ -31,39 +55,50 @@ const buildLoaders = (widgets: IWidget[]): Widget[] =>
   );
 
 const onClick = async () => {
+  if (!(await miro.isAuthorized())) {
+    await miro.showErrorNotification('🚧👮🏻‍🚔 Żeby mnie użyć, najpierw musisz autoryzować plugin!️ ‍🚔👮🏻🚧');
+    return;
+  }
+
   const selectedWidgets: IWidget[] = await miro.board.selection.get();
   if (!selectedWidgets.length) {
-    await miro.showErrorNotification('🚨 Select items to shuffle!');
+    await miro.showErrorNotification('🚨 Najpierw wybierz co mam losować! 😂');
     return;
   }
 
   if (selectedWidgets.length <= 1) {
-    await miro.showErrorNotification('🚨 Select more items to shuffle!');
+    await miro.showErrorNotification('🚨 Nie no... Jak mam losować z jednego elementu... 🤣');
+    return;
+  }
+
+  if (!elementsSameType(selectedWidgets)) {
+    await miro.showErrorNotification('🚨 Eee majster, ale to nie są te same elementy! 👮🏻‍️');
     return;
   }
 
   const shuffledWidgets: IWidget[] = [...selectedWidgets];
   shuffleArray(shuffledWidgets);
 
-  const loaders: IWidget[] = await miro.board.widgets.create(buildLoaders(selectedWidgets));
-  const selectedIds: string[] = [...selectedWidgets].map((widget: Widget) => widget.id);
-  const newWidgets: Widget[] = [...selectedWidgets].map((widget: Widget, index: number) => {
-    const {
-      bounds: { x, y },
-    }: { bounds: { x: number; y: number } } = shuffledWidgets[index];
-    return { ...widget, x, y } as Widget;
-  });
+  if (selectedWidgets.map(({ id }) => id).join(',') === shuffledWidgets.map(({ id }) => id).join(',')) {
+    await miro.showErrorNotification('Kurna wylosowałem tak samo 😅');
+    return;
+  }
 
-  await miro.board.widgets.deleteById(selectedIds);
-  await miro.board.widgets.create(newWidgets);
+  const widgetsPosition = calculateNewPositions(selectedWidgets, shuffledWidgets);
+
+  const loaders: IWidget[] = await miro.board.widgets.create(buildLoaders(selectedWidgets));
+  const promises = [...widgetsPosition].map((position) =>
+    miro.board.widgets.transformDelta(position.id, position.deltaX, position.deltaY),
+  );
+  await Promise.all(promises);
   await miro.board.widgets.deleteById(loaders.map((item: Widget) => item.id));
-  await miro.showNotification('Shuffled 😎');
+  await miro.showNotification('No i narobiłem bałaganu 😎');
 };
 
 const config: IPluginConfig = {
   extensionPoints: {
     bottomBar: {
-      title: 'Shuffle selected items',
+      title: 'Wymieszam za Ciebie kolejność 🙈',
       svgIcon,
       onClick,
     },
