@@ -1,13 +1,11 @@
-name: Check
+name: Deploy
 
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
-  check:
+  build-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,7 +23,12 @@ jobs:
           node-version: '14.15'
       - name: Install Dependencies 💉
         run: yarn install
-      - name: Check code 👮🏻‍♀️
-        run: yarn lint
-      - name: Check prettier 👩🏼‍🎨
-        run: yarn prettier
+      - name: Build 🔧
+        run: yarn build
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: dist # The folder the action should deploy.
+          CLEAN: true # Automatically remove deleted files from the deploy branch
