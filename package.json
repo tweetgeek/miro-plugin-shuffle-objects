@@ -17,6 +17,7 @@
     "build": "NODE_ENV=production webpack",
     "watch": "webpack -w",
     "prettier": "prettier --check ./src",
+    "prettier:fix": "prettier --write ./src",
     "lint": "eslint ./",
     "deploy": "yarn install && GH_PAGE=yes yarn build && gh-pages -d dist"
   },
