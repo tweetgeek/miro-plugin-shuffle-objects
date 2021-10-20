@@ -25,7 +25,7 @@ function shuffleArray(array: Array<any>) {
   }
 }
 
-const elementsSameType = (widgets: IWidget[]): boolean =>
+const areTheElementsOfTheSameType = (widgets: IWidget[]): boolean =>
   widgets.map(({ type }) => type).filter((v, i, a) => a.indexOf(v) === i).length === 1;
 
 const calculateNewPositions = (selectedWidgets: IWidget[], shuffledWidgets: IWidget[]): DeltaPosition[] => {
@@ -43,7 +43,7 @@ const calculateNewPositions = (selectedWidgets: IWidget[], shuffledWidgets: IWid
   return delta;
 };
 
-const buildLoaders = (widgets: IWidget[]): Widget[] =>
+const createLoaders = (widgets: IWidget[]): Widget[] =>
   [...widgets].map(
     (widget: Widget) =>
       ({
@@ -56,23 +56,23 @@ const buildLoaders = (widgets: IWidget[]): Widget[] =>
 
 const onClick = async () => {
   if (!(await miro.isAuthorized())) {
-    await miro.showErrorNotification('🚧👮🏻‍🚔 Żeby mnie użyć, najpierw musisz autoryzować plugin!️ ‍🚔👮🏻🚧');
+    await miro.showErrorNotification('🚧👮🏻‍🚔 To use me, you need to authorize the plugin first!️ ‍🚔👮🏻🚧');
     return;
   }
 
   const selectedWidgets: IWidget[] = await miro.board.selection.get();
   if (!selectedWidgets.length) {
-    await miro.showErrorNotification('🚨 Najpierw wybierz co mam losować! 😂');
+    await miro.showErrorNotification('🚨 First, choose what to shuffle! 😂');
     return;
   }
 
   if (selectedWidgets.length <= 1) {
-    await miro.showErrorNotification('🚨 Nie no... Jak mam losować z jednego elementu... 🤣');
+    await miro.showErrorNotification('🚨 There is nothing to shuffle.');
     return;
   }
 
-  if (!elementsSameType(selectedWidgets)) {
-    await miro.showErrorNotification('🚨 Eee majster, ale to nie są te same elementy! 👮🏻‍️');
+  if (!areTheElementsOfTheSameType(selectedWidgets)) {
+    await miro.showErrorNotification('🚨 The elements to be shuffled should be of the same type. 👮🏻‍️');
     return;
   }
 
@@ -80,33 +80,31 @@ const onClick = async () => {
   shuffleArray(shuffledWidgets);
 
   if (selectedWidgets.map(({ id }) => id).join(',') === shuffledWidgets.map(({ id }) => id).join(',')) {
-    await miro.showErrorNotification('Kurna wylosowałem tak samo 😅');
+    await miro.showErrorNotification('Unfortunately, I shuffled it the same way as it was. 😅');
     return;
   }
 
   const widgetsPosition = calculateNewPositions(selectedWidgets, shuffledWidgets);
-
-  const loaders: IWidget[] = await miro.board.widgets.create(buildLoaders(selectedWidgets));
+  const loaders: IWidget[] = await miro.board.widgets.create(createLoaders(selectedWidgets));
   const promises = [...widgetsPosition].map((position) =>
     miro.board.widgets.transformDelta(position.id, position.deltaX, position.deltaY),
   );
   await Promise.all(promises);
   await miro.board.widgets.deleteById(loaders.map((item: Widget) => item.id));
-  await miro.showNotification('No i narobiłem bałaganu 😎');
-};
-
-const config: IPluginConfig = {
-  extensionPoints: {
-    bottomBar: {
-      title: 'Wymieszam za Ciebie kolejność 🙈',
-      svgIcon,
-      onClick,
-    },
-  },
+  await miro.showNotification('I made a mess. 😎');
 };
 
 miro.onReady(async () => {
   try {
+    const config: IPluginConfig = {
+      extensionPoints: {
+        bottomBar: {
+          title: 'Shuffle the selected items',
+          svgIcon,
+          onClick,
+        },
+      },
+    };
     await miro.initialize(config);
   } catch (error) {
     // eslint-disable-next-line no-console
