@@ -1,8 +1,18 @@
 {
   "name": "miro-plugin-shuffle-objects",
-  "version": "1.1.0",
-  "private": true,
+  "description": "A plugin for miro.com that allows you to shuffle selected elements on the board.",
+  "version": "1.0.0",
+  "homepage": "https://github.com/tweetgeek/miro-plugin-shuffle-objects",
+  "bugs": {
+    "url": "https://github.com/tweetgeek/miro-plugin-shuffle-objects/issues"
+  },
+  "author": "Sebastian Dawidziak <sebastian@tweetgeek.pl> (https://tweetgeek.pl)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tweetgeek/miro-plugin-shuffle-objects.git"
+  },
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "prebuild": "rm -rf dist",
     "build": "NODE_ENV=production webpack",
     "watch": "webpack -w",
@@ -10,7 +20,7 @@
     "lint": "eslint ./",
     "deploy": "yarn install && GH_PAGE=yes yarn build && gh-pages -d dist"
   },
-  "license": "MIT",
+  "license": "ISC",
   "devDependencies": {
     "@mirohq/prettier-config": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^4.14.1",
