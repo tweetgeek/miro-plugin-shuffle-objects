@@ -26,6 +26,7 @@ export default defineConfig({
       input: allHtmlEntries,
     },
   },
+  base: '/miro-plugin-shuffle-objects/',
   plugins: [vue()],
   server: {
     port: 3000,
