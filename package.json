@@ -12,9 +12,9 @@
     "vue": "3.2.37"
   },
   "devDependencies": {
-    "vite": "3.0.3",
+    "vite": "6.0.11",
     "@mirohq/websdk-types": "latest",
-    "@vitejs/plugin-vue": "3.0.1",
+    "@vitejs/plugin-vue": "5.2.1",
     "typescript": "4.9.5"
   }
 }
